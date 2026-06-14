@@ -1,7 +1,10 @@
 #include "rightpanel.h"
 #include <QVBoxLayout>
 #include <QPushButton>
-
+#include "servermanager.h"
+#include <QInputDialog>
+#include <QMessageBox>
+#include <QUrl>
 RightPanel::RightPanel(QWidget *parent) : QWidget(parent) {
     setupUi();
 }
@@ -15,14 +18,56 @@ void RightPanel::setupUi() {
     QPushButton *addFileBtn = new QPushButton("add file", this);
     QPushButton *addServerBtn = new QPushButton("add server", this);
     QPushButton *removeServerBtn = new QPushButton("remove server", this);
-    
-    QString btnStyle = "color: #BBBBBB; font-size: 13px; padding: 8px; border: 1px solid blue; margin-bottom: 5px;";
-    addFileBtn->setStyleSheet(btnStyle); 
-    addServerBtn->setStyleSheet(btnStyle); 
+
+    QString btnStyle = "color: white; font-size: 13px; padding: 8px; border: 1px solid blue; margin-bottom: 5px;";
+    addFileBtn->setStyleSheet(btnStyle);
+    addServerBtn->setStyleSheet(btnStyle);
     removeServerBtn->setStyleSheet(btnStyle);
-    
-    layout->addWidget(addFileBtn); 
-    layout->addWidget(addServerBtn); 
+
+    layout->addWidget(addFileBtn);
+    layout->addWidget(addServerBtn);
     layout->addWidget(removeServerBtn);
     layout->addStretch();
+    connect(addFileBtn, &QPushButton::clicked, this, &RightPanel::addFileRequested);
+    connect(addServerBtn, &QPushButton::clicked, [this]() {
+        bool ok;
+        QString text = QInputDialog::getText(this, "Dodaj Serwer HTTP",
+                                             "Podaj adres serwera: ",
+                                             QLineEdit::Normal,
+                                             "http://", &ok);
+
+        if (ok && !text.isEmpty()) {
+            QUrl url(text);
+            if (url.isValid() && (url.scheme() == "http" || url.scheme() == "https")) {
+                if (ServerManager::getInstance().addServer(text)) {
+                    QMessageBox::information(this, "Sukces", "Pomyślnie dodano serwer:\n" + text);
+                } else {
+                    QMessageBox::warning(this, "Uwaga", "Ten serwer jest już na liście.");
+                }
+            } else {
+                QMessageBox::critical(this, "Błąd", "Nieprawidłowy adres URL. Musi zaczynać się od http:// lub https://");
+            }
+        }
+    });
+    connect(removeServerBtn, &QPushButton::clicked, [this]() {
+        auto servers = ServerManager::getInstance().getServers();
+
+        if (servers.empty()) {
+            QMessageBox::information(this, "Pusto", "Brak serwerów do usunięcia.");
+            return;
+        }
+        QStringList serverList;
+        for (const auto& s : servers) {
+            serverList << s;
+        }
+
+        bool ok;
+        QString item = QInputDialog::getItem(this, "Usuń Serwer",
+                                             "Wybierz serwer do usunięcia:",
+                                             serverList, 0, false, &ok);
+        if (ok && !item.isEmpty()) {
+            ServerManager::getInstance().removeServer(item);
+            QMessageBox::information(this, "Usunięto", "Usunięto serwer:\n" + item);
+        }
+    });
 }
