@@ -12,7 +12,9 @@ class LeftPanel : public QWidget {
     Q_OBJECT
 public:
     explicit LeftPanel(QWidget *parent = nullptr);
-
+signals:
+    void playlistSelected(const QString& playlistName);
+    void playlistDeleted(const QString& playlistName);
 private:
     void setupUi();
 
