@@ -14,8 +14,18 @@ void BottomBar::setupUi() {
     setFixedHeight(100);
 
     setStyleSheet("BottomBar { background-color: #1b1818; border-top: 1px solid blue; }");
-
-    QHBoxLayout *layout = new QHBoxLayout(this);
+    QVBoxLayout *mainLayout = new QVBoxLayout(this);
+    mainLayout->setContentsMargins(20, 5, 20, 5);
+    mainLayout->setSpacing(5);
+    m_progressSlider = new QSlider(Qt::Horizontal, this);
+    m_progressSlider->setRange(0, 0);
+    m_progressSlider->setStyleSheet(
+        "QSlider::groove:horizontal { background: #333333; height: 4px; border-radius: 2px; }"
+        "QSlider::sub-page:horizontal { background: blue; border-radius: 2px; }"
+        "QSlider::handle:horizontal { background: white; width: 12px; margin: -4px 0; border-radius: 6px; }"
+        );
+    mainLayout->addWidget(m_progressSlider);
+    QHBoxLayout *layout = new QHBoxLayout();
     layout->setContentsMargins(20, 10, 20, 10);
     layout->setSpacing(15);
 
@@ -61,4 +71,5 @@ void BottomBar::setupUi() {
         if(m_playButton->text() == "▶️") m_playButton->setText("⏸️");
         else m_playButton->setText("▶️");
     });
+    mainLayout->addLayout(layout);
 }
